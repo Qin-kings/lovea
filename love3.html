@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>情侣小站 ❤️</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-pink-200 via-pink-300 to-pink-400 min-h-screen flex flex-col items-center p-6">
+  <h1 class="text-4xl font-bold text-white mb-6">我们的情侣小站 💕</h1>
+
+  <!-- 头像上传（保留选择文件，不显示保存路径） -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl mb-6">
+    <h2 class="text-xl font-semibold mb-4">我们的头像</h2>
+    <div class="flex gap-6">
+      <div class="flex flex-col items-center">
+        <img id="avatar1" class="w-24 h-24 rounded-full object-cover border-2 mb-2" src="love/images/qinbaotai.png" alt="头像1">
+        <!-- 仅保留选择文件按钮 -->
+        <input type="file" accept="image/*" onchange="uploadAvatar(event, 'avatar1')">
+        <!-- 可选：恢复仓库图片（默认） -->
+        <button onclick="restoreDefault('avatar1')" class="mt-2 px-2 py-1 bg-gray-200 text-sm rounded">恢复默认</button>
+        <p class="text-sm text-gray-500 mt-1">Ta 💖</p>
+      </div>
+
+      <div class="flex flex-col items-center">
+        <img id="avatar2" class="w-24 h-24 rounded-full object-cover border-2 mb-2" src="" alt="头像2">
+        <input type="file" accept="image/*" onchange="uploadAvatar(event, 'avatar2')">
+        <button onclick="restoreDefault('avatar2')" class="mt-2 px-2 py-1 bg-gray-200 text-sm rounded">恢复默认</button>
+        <p class="text-sm text-gray-500 mt-1">我 💙</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 个人信息 -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl mb-6">
+    <h2 class="text-xl font-semibold mb-4">个人信息</h2>
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <h3 class="font-bold mb-2">Ta 💖</h3>
+        <input id="info1" class="w-full p-2 border rounded" placeholder="姓名, 年龄, 身高, 兴趣爱好...">
+      </div>
+      <div>
+        <h3 class="font-bold mb-2">我 💙</h3>
+        <input id="info2" class="w-full p-2 border rounded" placeholder="姓名, 年龄, 身高, 兴趣爱好...">
+      </div>
+    </div>
+    <button onclick="saveInfo()" class="mt-4 px-4 py-2 bg-pink-400 text-white rounded-xl shadow">保存</button>
+  </div>
+
+  <!-- 相爱时长 -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl mb-6">
+    <h2 class="text-xl font-semibold mb-4">我们的相爱时长</h2>
+    <input type="date" id="loveDate" class="border rounded p-2 mb-2">
+    <button onclick="saveLoveDate()" class="px-4 py-2 bg-pink-400 text-white rounded-xl shadow">确定</button>
+    <p id="loveDays" class="mt-4 text-lg font-bold text-pink-600"></p>
+  </div>
+
+  <!-- 生活相册（保持原样） -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl mb-6">
+    <h2 class="text-xl font-semibold mb-4">我们的相册 📸</h2>
+    <input type="file" accept="image/*" multiple onchange="uploadPhotos(event)">
+    <div class="flex mt-2">
+      <input type="text" id="photoPath" placeholder="images/xxx.jpg" class="flex-1 p-2 border rounded mr-2">
+      <button onclick="savePhotoPath()" class="px-4 py-2 bg-pink-400 text-white rounded-xl shadow">添加路径</button>
+    </div>
+    <div id="gallery" class="grid grid-cols-3 gap-4 mt-4"></div>
+  </div>
+
+  <script>
+    // ---------- 配置：仓库中默认的头像路径（写死在代码里） ----------
+    const defaultRepo = {
+      avatar1: 'images/qinbaotai.png',
+      avatar2: 'images/yanxuran.png'
+    };
+
+    // ---------- 头像上传（FileReader -> localStorage） ----------
+    function uploadAvatar(event, id) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById(id).src = e.target.result;
+        localStorage.setItem(id, e.target.result); // 上传后保存在本地（覆盖仓库默认）
+      };
+      reader.readAsDataURL(file);
+      // 清输入值以便下次能重复选择同一文件（可选）
+      event.target.value = '';
+    }
+
+    // 恢复为仓库中写死的图片（并清除本地上传）
+    function restoreDefault(id) {
+      localStorage.removeItem(id);
+      document.getElementById(id).src = defaultRepo[id];
+    }
+
+    // 初始化：优先显示 localStorage 上传的图片，否则显示仓库默认路径
+    ['avatar1','avatar2'].forEach(id => {
+      const uploaded = localStorage.getItem(id);
+      if (uploaded) {
+        document.getElementById(id).src = uploaded;
+      } else {
+        document.getElementById(id).src = defaultRepo[id];
+      }
+    });
+
+    // ---------- 其余功能（个人信息、相爱时长、相册）保持原逻辑 ----------
+    function saveInfo() {
+      localStorage.setItem('info1', document.getElementById('info1').value);
+      localStorage.setItem('info2', document.getElementById('info2').value);
+      alert("保存成功 ✅");
+    }
+    document.getElementById('info1').value = localStorage.getItem('info1') || '';
+    document.getElementById('info2').value = localStorage.getItem('info2') || '';
+
+    function saveLoveDate() {
+      localStorage.setItem('loveDate', document.getElementById('loveDate').value);
+      calcLoveDays();
+    }
+    function calcLoveDays() {
+      const date = localStorage.getItem('loveDate');
+      if (!date) return;
+      document.getElementById('loveDate').value = date;
+      const start = new Date(date);
+      const now = new Date();
+      const days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+      document.getElementById('loveDays').innerText = `我们已经在一起 ${days} 天啦 ❤️`;
+    }
+    calcLoveDays();
+
+    function uploadPhotos(event) {
+      const files = event.target.files;
+      let gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          gallery.push({src: e.target.result, type: 'local'});
+          localStorage.setItem('gallery', JSON.stringify(gallery));
+          renderGallery();
+        };
+        reader.readAsDataURL(file);
+      });
+      event.target.value = '';
+    }
+
+    function savePhotoPath() {
+      const path = document.getElementById('photoPath').value;
+      if (!path) return;
+      let gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
+      gallery.push({src: path, type: 'path'});
+      localStorage.setItem('gallery', JSON.stringify(gallery));
+      document.getElementById('photoPath').value = '';
+      renderGallery();
+    }
+
+    function renderGallery() {
+      const gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
+      const container = document.getElementById('gallery');
+      container.innerHTML = '';
+      gallery.forEach(item => {
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.className = "w-full h-32 object-cover rounded-xl";
+        container.appendChild(img);
+      });
+    }
+    renderGallery();
+  </script>
+</body>
+</html>
