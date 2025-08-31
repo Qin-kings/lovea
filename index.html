@@ -1,31 +1,48 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>情侣小站 ❤️</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+   <meta charset="UTF-8">
+   <title>情侣小站 ❤️</title>
+   <script src="https://cdn.tailwindcss.com"></script>
+   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
 </head>
 <body class="bg-gradient-to-r from-pink-200 via-pink-300 to-pink-400 min-h-screen flex flex-col items-center p-6">
   <h1 class="text-4xl font-bold text-white mb-6">我们的情侣小站 💕</h1>
 
-  <!-- 头像上传（保留选择文件，不显示保存路径） -->
-  <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl mb-6">
-    <h2 class="text-xl font-semibold mb-4">我们的头像</h2>
-    <div class="flex gap-6">
-      <div class="flex flex-col items-center">
-        <img id="avatar1" class="w-24 h-24 rounded-full object-cover border-2 mb-2" src="love/images/qinbaotai.png" alt="头像1">
-        <!-- 仅保留选择文件按钮 -->
-        <input type="file" accept="image/*" onchange="uploadAvatar(event, 'avatar1')">
-        <!-- 可选：恢复仓库图片（默认） -->
-        <button onclick="restoreDefault('avatar1')" class="mt-2 px-2 py-1 bg-gray-200 text-sm rounded">恢复默认</button>
-        <p class="text-sm text-gray-500 mt-1">Ta 💖</p>
+  <!-- 头像区域 -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl mb-6 relative">
+      <h2 class="text-xl font-semibold mb-4 text-center">我们的头像</h2>
+    <div class="relative w-full flex justify-between">
+      <!-- 左边头像 -->
+      <div class="flex flex-col items-center ml-[20%]">
+        <img id="avatar1"
+             class="w-24 h-24 rounded-full object-cover border-2 mb-2 cursor-pointer"
+             src="https://picsum.photos/id/1/200/200"
+             alt="老公头像"
+             onclick="openModal('avatarModal', 'avatar1')">
+        <p class="text-sm text-gray-500">老公 💙</p>
       </div>
 
-      <div class="flex flex-col items-center">
-        <img id="avatar2" class="w-24 h-24 rounded-full object-cover border-2 mb-2" src="" alt="头像2">
-        <input type="file" accept="image/*" onchange="uploadAvatar(event, 'avatar2')">
-        <button onclick="restoreDefault('avatar2')" class="mt-2 px-2 py-1 bg-gray-200 text-sm rounded">恢复默认</button>
-        <p class="text-sm text-gray-500 mt-1">我 💙</p>
+      <!-- 右边头像 -->
+      <div class="flex flex-col items-center mr-[20%]">
+        <img id="avatar2"
+             class="w-24 h-24 rounded-full object-cover border-2 mb-2 cursor-pointer"
+             src="https://picsum.photos/id/2/200/200"
+             alt="老婆头像"
+             onclick="openModal('avatarModal', 'avatar2')">
+        <p class="text-sm text-gray-500">老婆 💖</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 头像修改弹出层 -->
+  <div id="avatarModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 shadow-lg relative w-72">
+      <h3 class="text-lg font-semibold mb-4">更换头像</h3>
+      <input type="file" id="fileInput" accept="image/*" class="mb-3">
+      <div class="flex justify-between">
+        <button onclick="resetAvatar()" class="px-3 py-1 bg-gray-400 text-white rounded">恢复默认</button>
+        <button onclick="closeModal('avatarModal')" class="px-3 py-1 bg-pink-500 text-white rounded">关闭</button>
       </div>
     </div>
   </div>
@@ -33,99 +50,288 @@
   <!-- 个人信息 -->
   <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl mb-6">
     <h2 class="text-xl font-semibold mb-4">个人信息</h2>
-    <div class="grid grid-cols-2 gap-6">
-      <div>
-        <h3 class="font-bold mb-2">Ta 💖</h3>
-        <input id="info1" class="w-full p-2 border rounded" placeholder="姓名, 年龄, 身高, 兴趣爱好...">
-      </div>
-      <div>
-        <h3 class="font-bold mb-2">我 💙</h3>
-        <input id="info2" class="w-full p-2 border rounded" placeholder="姓名, 年龄, 身高, 兴趣爱好...">
-      </div>
+    <table id="infoTable" class="w-full border-collapse border text-center">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="border p-2">项目</th>
+          <th class="border p-2">老公 💙</th>
+          <th class="border p-2">老婆 💖</th>
+        </tr>
+      </thead>
+      <tbody id="infoTableBody">
+        <!-- JS 会在加载时填充默认行或保存的数据 -->
+      </tbody>
+    </table>
+    <div class="flex gap-3 mt-4">
+      <button type="button" onclick="addInfoRow()" class="px-4 py-2 bg-green-400 text-white rounded-xl shadow">新增</button>
+      <button type="button" onclick="saveTableInfo()" class="px-4 py-2 bg-pink-400 text-white rounded-xl shadow">保存</button>
     </div>
-    <button onclick="saveInfo()" class="mt-4 px-4 py-2 bg-pink-400 text-white rounded-xl shadow">保存</button>
   </div>
 
-  <!-- 相爱时长 -->
+  <!-- 相爱时长（修复显示问题） -->
   <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl mb-6">
     <h2 class="text-xl font-semibold mb-4">我们的相爱时长</h2>
-    <input type="date" id="loveDate" class="border rounded p-2 mb-2">
-    <button onclick="saveLoveDate()" class="px-4 py-2 bg-pink-400 text-white rounded-xl shadow">确定</button>
-    <p id="loveDays" class="mt-4 text-lg font-bold text-pink-600"></p>
+    <!-- 修复的布局：确保时间文本居中显示 -->
+    <div class="border rounded p-4 flex items-center justify-between">
+      <div class="flex-1 text-center">
+        <p id="loveDays" class="text-lg font-bold text-pink-600"></p>
+      </div>
+      <button onclick="openModal('loveDateModal')" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded">修改</button>
+    </div>
   </div>
 
-  <!-- 生活相册（保持原样） -->
+  <!-- 相爱时长修改弹出层 -->
+  <div id="loveDateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 shadow-lg relative w-72">
+      <h3 class="text-lg font-semibold mb-4">修改相爱起始时间</h3>
+      <input type="date" id="loveDateInModal" class="border rounded p-2 mb-3 w-full">
+      <div class="flex justify-between">
+        <button onclick="resetLoveDateInput()" class="px-3 py-1 bg-gray-400 text-white rounded">恢复默认</button>
+        <button onclick="saveLoveDateFromModal()" class="px-3 py-1 bg-pink-500 text-white rounded">确定</button>
+        <button onclick="closeModal('loveDateModal')" class="px-3 py-1 bg-gray-500 text-white rounded">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 生活相册 -->
   <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl mb-6">
     <h2 class="text-xl font-semibold mb-4">我们的相册 📸</h2>
     <input type="file" accept="image/*" multiple onchange="uploadPhotos(event)">
     <div class="flex mt-2">
-      <input type="text" id="photoPath" placeholder="images/xxx.jpg" class="flex-1 p-2 border rounded mr-2">
+      <input type="text" id="photoPath" placeholder="输入图片路径" class="flex-1 p-2 border rounded mr-2">
       <button onclick="savePhotoPath()" class="px-4 py-2 bg-pink-400 text-white rounded-xl shadow">添加路径</button>
     </div>
     <div id="gallery" class="grid grid-cols-3 gap-4 mt-4"></div>
   </div>
 
   <script>
-    // ---------- 配置：仓库中默认的头像路径（写死在代码里） ----------
-    const defaultRepo = {
-      avatar1: 'images/qinbaotai.png',
-      avatar2: 'images/yanxuran.png'
+    let currentAvatarId = null;
+    // 默认头像路径
+    const defaultAvatars = {
+      avatar1: "images/qinbaotai.png",
+      avatar2: "images/yanxuran.png"
     };
+    // 默认恋爱起始时间
+    const DEFAULT_LOVE_DATE = "2024-02-26T00:00:00+08:00";
+    // 保存原始日期值，用于取消时恢复
+    let originalLoveDate = "";
 
-    // ---------- 头像上传（FileReader -> localStorage） ----------
-    function uploadAvatar(event, id) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        document.getElementById(id).src = e.target.result;
-        localStorage.setItem(id, e.target.result); // 上传后保存在本地（覆盖仓库默认）
-      };
-      reader.readAsDataURL(file);
-      // 清输入值以便下次能重复选择同一文件（可选）
-      event.target.value = '';
+    // 打开弹窗
+    function openModal(modalId, avatarId = null) {
+      if (modalId === 'avatarModal' && avatarId) {
+        currentAvatarId = avatarId;
+      }
+      if (modalId === 'loveDateModal') {
+        // 保存原始值
+        originalLoveDate = getLoveDate().substring(0, 10);
+        document.getElementById('loveDateInModal').value = originalLoveDate;
+      }
+      document.getElementById(modalId).classList.remove("hidden");
     }
 
-    // 恢复为仓库中写死的图片（并清除本地上传）
-    function restoreDefault(id) {
-      localStorage.removeItem(id);
-      document.getElementById(id).src = defaultRepo[id];
+    // 关闭弹窗
+    function closeModal(modalId) {
+      if (modalId === 'loveDateModal') {
+        // 恢复原始值
+        document.getElementById('loveDateInModal').value = originalLoveDate;
+      }
+      document.getElementById(modalId).classList.add("hidden");
+      if (modalId === 'avatarModal') {
+        currentAvatarId = null;
+        document.getElementById("fileInput").value = "";
+      }
     }
 
-    // 初始化：优先显示 localStorage 上传的图片，否则显示仓库默认路径
-    ['avatar1','avatar2'].forEach(id => {
-      const uploaded = localStorage.getItem(id);
-      if (uploaded) {
-        document.getElementById(id).src = uploaded;
-      } else {
-        document.getElementById(id).src = defaultRepo[id];
+    // 头像上传和保存
+    document.getElementById("fileInput").addEventListener("change", function (event) {
+      if (event.target.files && event.target.files[0] && currentAvatarId) {
+        let reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById(currentAvatarId).src = e.target.result;
+          localStorage.setItem(currentAvatarId, e.target.result);
+        };
+        reader.readAsDataURL(event.target.files[0]);
       }
     });
 
-    // ---------- 其余功能（个人信息、相爱时长、相册）保持原逻辑 ----------
-    function saveInfo() {
-      localStorage.setItem('info1', document.getElementById('info1').value);
-      localStorage.setItem('info2', document.getElementById('info2').value);
-      alert("保存成功 ✅");
+    // 恢复默认头像
+    function resetAvatar() {
+      if (currentAvatarId) {
+        localStorage.removeItem(currentAvatarId);
+        document.getElementById(currentAvatarId).src = defaultAvatars[currentAvatarId];
+      }
+      closeModal('avatarModal');
     }
-    document.getElementById('info1').value = localStorage.getItem('info1') || '';
-    document.getElementById('info2').value = localStorage.getItem('info2') || '';
 
-    function saveLoveDate() {
-      localStorage.setItem('loveDate', document.getElementById('loveDate').value);
-      calcLoveDays();
+    // 初始化头像
+    ['avatar1','avatar2'].forEach(id => {
+      const saved = localStorage.getItem(id);
+      if (saved) {
+        document.getElementById(id).src = saved;
+      } else {
+        document.getElementById(id).src = defaultAvatars[id];
+      }
+    });
+
+    // 个人信息表格
+    const PERSONAL_INFO_KEY = 'personalInfoTable_v1';
+    const fallbackPersonalInfo = [
+      { project: "年龄", ta: "22", me: "23" },
+      { project: "爱好", ta: "运动", me: "睡觉" },
+      { project: "游戏", ta: "王者", me: "蛋仔" }
+    ];
+
+    function createInfoRow(project = '', ta = '', me = '') {
+      const tr = document.createElement('tr');
+      const tdProj = document.createElement('td');
+      tdProj.className = 'border p-2';
+      const inpProj = document.createElement('input');
+      inpProj.type = 'text';
+      inpProj.placeholder = '项目';
+      inpProj.className = 'w-full p-1 border rounded project-input';
+      inpProj.value = project;
+      tdProj.appendChild(inpProj);
+
+      const tdTa = document.createElement('td');
+      tdTa.className = 'border p-2';
+      const inpTa = document.createElement('input');
+      inpTa.type = 'text';
+      inpTa.placeholder = '老公 💙';
+      inpTa.className = 'w-full p-1 border rounded ta-input';
+      inpTa.value = ta;
+      tdTa.appendChild(inpTa);
+
+      const tdMe = document.createElement('td');
+      tdMe.className = 'border p-2 flex items-center gap-2';
+      const inpMe = document.createElement('input');
+      inpMe.type = 'text';
+      inpMe.placeholder = '老婆 💖';
+      inpMe.className = 'w-full p-1 border rounded me-input';
+      inpMe.value = me;
+      tdMe.appendChild(inpMe);
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'ml-2 px-2 py-1 bg-red-400 text-white rounded text-sm';
+      delBtn.textContent = '删';
+      delBtn.onclick = () => { tr.remove(); };
+      tdMe.appendChild(delBtn);
+
+      tr.appendChild(tdProj);
+      tr.appendChild(tdTa);
+      tr.appendChild(tdMe);
+      return tr;
     }
-    function calcLoveDays() {
-      const date = localStorage.getItem('loveDate');
-      if (!date) return;
-      document.getElementById('loveDate').value = date;
-      const start = new Date(date);
+
+    function addInfoRow() {
+      const tbody = document.getElementById('infoTableBody');
+      tbody.appendChild(createInfoRow());
+    }
+
+    function saveTableInfo() {
+      const rows = document.querySelectorAll('#infoTableBody tr');
+      const data = [];
+      rows.forEach(row => {
+        const project = row.querySelector('.project-input')?.value || '';
+        const ta = row.querySelector('.ta-input')?.value || '';
+        const me = row.querySelector('.me-input')?.value || '';
+        if (project.trim() === '' && ta.trim() === '' && me.trim() === '') return;
+        data.push({ project, ta, me });
+      });
+      localStorage.setItem(PERSONAL_INFO_KEY, JSON.stringify(data));
+      showNotification('已保存 ✅');
+    }
+
+    function loadTableInfo() {
+      const tbody = document.getElementById('infoTableBody');
+      tbody.innerHTML = '';
+      const saved = localStorage.getItem(PERSONAL_INFO_KEY);
+
+      if (saved) {
+        try {
+          const arr = JSON.parse(saved);
+          if (Array.isArray(arr) && arr.length > 0) {
+            arr.forEach(r => tbody.appendChild(createInfoRow(r.project, r.ta, r.me)));
+            return;
+          }
+        } catch (e) {
+          console.warn("解析 localStorage 失败：", e);
+        }
+      }
+
+      const defaultInfo = (window.defaultPersonalInfo && Array.isArray(window.defaultPersonalInfo))
+        ? window.defaultPersonalInfo
+        : fallbackPersonalInfo;
+
+      defaultInfo.forEach(r => tbody.appendChild(createInfoRow(r.project, r.ta, r.me)));
+    }
+
+    // 相爱时长功能（修复显示问题）
+    function getLoveDate() {
+      return localStorage.getItem("loveDate") || DEFAULT_LOVE_DATE;
+    }
+
+    function saveLoveDateFromModal() {
+      const inputDate = document.getElementById('loveDateInModal').value;
+      if (inputDate) {
+        const finalDate = `${inputDate}T00:00:00+08:00`;
+        localStorage.setItem("loveDate", finalDate);
+        calcLoveTime();
+        closeModal('loveDateModal');
+        showNotification('时间已更新 ❤️');
+      }
+    }
+
+    // 重置输入框为默认日期，但不保存
+    function resetLoveDateInput() {
+      document.getElementById('loveDateInModal').value = DEFAULT_LOVE_DATE.substring(0, 10);
+    }
+
+    // 核心修复：确保时间计算并正确显示
+    function calcLoveTime() {
+      const start = new Date(getLoveDate());
       const now = new Date();
-      const days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-      document.getElementById('loveDays').innerText = `我们已经在一起 ${days} 天啦 ❤️`;
-    }
-    calcLoveDays();
+      let diff = Math.floor((now - start) / 1000);
+      if (diff < 0) diff = 0;
 
+      const years = Math.floor(diff / (365 * 24 * 3600));
+      diff %= (365 * 24 * 3600);
+      const months = Math.floor(diff / (30 * 24 * 3600));
+      diff %= (30 * 24 * 3600);
+      const days = Math.floor(diff / (24 * 3600));
+      diff %= (24 * 3600);
+      const hours = Math.floor(diff / 3600);
+      diff %= 3600;
+      const minutes = Math.floor(diff / 60);
+      const seconds = diff % 60;
+
+      // 确保时间文本被正确设置到DOM
+      const loveDaysElement = document.getElementById("loveDays");
+      if (loveDaysElement) {
+        loveDaysElement.innerText =
+          `我们已经在一起 ${years}年 ${months}月 ${days}天 ${hours}小时 ${minutes}分钟 ${seconds}秒 ❤️`;
+      }
+    }
+    // 显示通知
+    function showNotification(message) {
+      const notice = document.createElement('div');
+      notice.textContent = message;
+      notice.className = 'fixed right-6 bottom-6 bg-black text-white px-3 py-2 rounded shadow z-50';
+      document.body.appendChild(notice);
+      setTimeout(() => notice.remove(), 1500);
+    }
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      loadTableInfo();
+      renderGallery();
+
+      // 初始化并启动计时器更新恋爱时长
+      const startDate = getLoveDate();
+      calcLoveTime(); // 立即计算一次
+      setInterval(calcLoveTime, 1000); // 每秒更新一次
+    });
+    // 相册功能
     function uploadPhotos(event) {
       const files = event.target.files;
       let gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
@@ -139,6 +345,7 @@
         reader.readAsDataURL(file);
       });
       event.target.value = '';
+      showNotification('照片已添加 📸');
     }
 
     function savePhotoPath() {
@@ -149,20 +356,35 @@
       localStorage.setItem('gallery', JSON.stringify(gallery));
       document.getElementById('photoPath').value = '';
       renderGallery();
+      showNotification('照片路径已添加 📸');
     }
 
     function renderGallery() {
       const gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
       const container = document.getElementById('gallery');
       container.innerHTML = '';
-      gallery.forEach(item => {
+      gallery.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = "relative";
         const img = document.createElement('img');
         img.src = item.src;
         img.className = "w-full h-32 object-cover rounded-xl";
-        container.appendChild(img);
+        img.alt = `相册照片 ${index + 1}`;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = "absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs";
+        deleteBtn.innerHTML = '<i class="fa fa-times"></i>';
+        deleteBtn.onclick = () => {
+          gallery.splice(index, 1);
+          localStorage.setItem('gallery', JSON.stringify(gallery));
+          renderGallery();
+        };
+
+        div.appendChild(img);
+        div.appendChild(deleteBtn);
+        container.appendChild(div);
       });
     }
-    renderGallery();
   </script>
 </body>
 </html>
