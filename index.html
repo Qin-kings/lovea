@@ -39,7 +39,7 @@
   <div id="avatarModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-xl p-6 shadow-lg relative w-72">
       <h3 class="text-lg font-semibold mb-4">更换头像</h3>
-      <input type="file" id="fileInput" accept="image/*" class="mb-3">
+      <input type="file" id="avatarFileInput" accept="image/*" class="mb-3">
       <div class="flex justify-between">
         <button onclick="resetAvatar()" class="px-3 py-1 bg-gray-400 text-white rounded">恢复默认</button>
         <button onclick="closeModal('avatarModal')" class="px-3 py-1 bg-pink-500 text-white rounded">关闭</button>
@@ -93,18 +93,80 @@
     </div>
   </div>
 
-  <!-- 生活相册 -->
+  <!-- 生活相册 - 替换为Cloudinary+GitHub版本 -->
   <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl mb-6">
-    <h2 class="text-xl font-semibold mb-4">我们的相册 📸</h2>
-    <input type="file" accept="image/*" multiple onchange="uploadPhotos(event)">
-    <div class="flex mt-2">
-      <input type="text" id="photoPath" placeholder="输入图片路径" class="flex-1 p-2 border rounded mr-2">
-      <button onclick="savePhotoPath()" class="px-4 py-2 bg-pink-400 text-white rounded-xl shadow">添加路径</button>
+    <!-- 设置面板 -->
+    <details class="mb-4 bg-white rounded-xl shadow p-4">
+      <summary class="cursor-pointer font-semibold text-pink-700 select-none">相册设置（仅自己填写一次即可）</summary>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+        <div class="col-span-1 sm:col-span-2">
+          <h2 class="font-semibold text-gray-700 mb-2">Cloudinary</h2>
+        </div>
+        <label class="block">
+          <span class="text-sm text-gray-600">Cloud name</span>
+          <input id="cloudName" class="w-full mt-1 border rounded px-2 py-1" placeholder="例如：abcd1234" />
+        </label>
+        <label class="block">
+          <span class="text-sm text-gray-600">Unsigned upload preset</span>
+          <input id="uploadPreset" class="w-full mt-1 border rounded px-2 py-1" placeholder="例如：unsigned_preset" />
+        </label>
+
+        <div class="col-span-1 sm:col-span-2 mt-2">
+          <h2 class="font-semibold text-gray-700 mb-2">GitHub</h2>
+        </div>
+        <label class="block">
+          <span class="text-sm text-gray-600">Owner（用户名/组织）</span>
+          <input id="ghOwner" class="w-full mt-1 border rounded px-2 py-1" placeholder="例如：yourname" />
+        </label>
+        <label class="block">
+          <span class="text-sm text-gray-600">Repo</span>
+          <input id="ghRepo" class="w-full mt-1 border rounded px-2 py-1" placeholder="例如：love-gallery" />
+        </label>
+        <label class="block">
+          <span class="text-sm text-gray-600">Branch</span>
+          <input id="ghBranch" class="w-full mt-1 border rounded px-2 py-1" placeholder="默认 main" value="main" />
+        </label>
+        <label class="block">
+          <span class="text-sm text-gray-600">Manifest 路径</span>
+          <input id="ghFile" class="w-full mt-1 border rounded px-2 py-1" placeholder="例如：gallery.json" value="gallery.json" />
+        </label>
+        <label class="block sm:col-span-2">
+          <span class="text-sm text-gray-600">GitHub Token（PAT，写入权限）</span>
+          <input id="ghToken" type="password" class="w-full mt-1 border rounded px-2 py-1" placeholder="只在本机输入，不要提交到仓库" />
+          <div class="flex items-center gap-3 mt-2">
+            <label class="inline-flex items-center gap-2 text-sm">
+              <input id="rememberToken" type="checkbox" class="scale-110" />
+              <span>记住 Token（仅保存在本机 localStorage）</span>
+            </label>
+            <button id="clearTokenBtn" class="text-xs text-gray-500 underline">清除已保存 Token</button>
+          </div>
+        </label>
+      </div>
+
+      <div class="mt-4 flex gap-2">
+        <button id="saveCfgBtn" class="px-4 py-2 bg-pink-500 text-white rounded-lg">保存设置</button>
+        <button id="refreshBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border">刷新相册</button>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">
+        提示：先在仓库创建 <code>gallery.json</code>，内容为 <code>[]</code>。页面会使用 GitHub API 读取最新内容（优于 raw.githubusercontent）。
+      </p>
+    </details>
+
+    <!-- 上传区 -->
+    <div class="bg-white rounded-xl shadow p-4 mb-4">
+      <h2 class="font-semibold text-gray-700 mb-3">上传图片到 Cloudinary 并写入 GitHub</h2>
+      <input id="fileInput" type="file" accept="image/*" multiple class="mb-3" />
+      <button id="uploadBtn" class="px-4 py-2 bg-pink-600 text-white rounded-lg">上传</button>
+      <p id="msg" class="text-sm text-gray-600 mt-2"></p>
     </div>
-    <div id="gallery" class="grid grid-cols-3 gap-4 mt-4"></div>
+
+    <!-- 相册 -->
+    <h2 class="text-xl font-semibold mb-4">我们的相册 📸</h2>
+    <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
   </div>
 
   <script>
+    // ========== 原有功能代码 ==========
     let currentAvatarId = null;
     // 默认头像路径
     const defaultAvatars = {
@@ -138,12 +200,12 @@
       document.getElementById(modalId).classList.add("hidden");
       if (modalId === 'avatarModal') {
         currentAvatarId = null;
-        document.getElementById("fileInput").value = "";
+        document.getElementById("avatarFileInput").value = "";
       }
     }
 
     // 头像上传和保存
-    document.getElementById("fileInput").addEventListener("change", function (event) {
+    document.getElementById("avatarFileInput").addEventListener("change", function (event) {
       if (event.target.files && event.target.files[0] && currentAvatarId) {
         let reader = new FileReader();
         reader.onload = function (e) {
@@ -312,6 +374,7 @@
           `我们已经在一起 ${years}年 ${months}月 ${days}天 ${hours}小时 ${minutes}分钟 ${seconds}秒 ❤️`;
       }
     }
+    
     // 显示通知
     function showNotification(message) {
       const notice = document.createElement('div');
@@ -321,9 +384,221 @@
       setTimeout(() => notice.remove(), 1500);
     }
 
+    // ========== Cloudinary + GitHub 相册功能 ==========
+    // 小工具
+    const C = {
+      cloudName: 'cloudName', uploadPreset: 'uploadPreset',
+      ghOwner: 'ghOwner', ghRepo: 'ghRepo', ghBranch: 'ghBranch',
+      ghFile: 'ghFile', ghTokenSaved: 'ghTokenSaved'
+    };
+    const $ = s => document.querySelector(s);
+    const msg = t => { $('#msg').textContent = t || ''; };
+
+    function loadCfgToForm() {
+      $('#cloudName').value = localStorage.getItem(C.cloudName) || '';
+      $('#uploadPreset').value = localStorage.getItem(C.uploadPreset) || '';
+      $('#ghOwner').value = localStorage.getItem(C.ghOwner) || '';
+      $('#ghRepo').value = localStorage.getItem(C.ghRepo) || '';
+      $('#ghBranch').value = localStorage.getItem(C.ghBranch) || 'main';
+      $('#ghFile').value = localStorage.getItem(C.ghFile) || 'gallery.json';
+      const t = localStorage.getItem(C.ghTokenSaved) || '';
+      if (t) { $('#ghToken').value = t; $('#rememberToken').checked = true; }
+    }
+    
+    function saveFormToCfg() {
+      localStorage.setItem(C.cloudName, $('#cloudName').value.trim());
+      localStorage.setItem(C.uploadPreset, $('#uploadPreset').value.trim());
+      localStorage.setItem(C.ghOwner, $('#ghOwner').value.trim());
+      localStorage.setItem(C.ghRepo, $('#ghRepo').value.trim());
+      localStorage.setItem(C.ghBranch, $('#ghBranch').value.trim() || 'main');
+      localStorage.setItem(C.ghFile, $('#ghFile').value.trim() || 'gallery.json');
+      const t = $('#ghToken').value.trim();
+      if ($('#rememberToken').checked && t) localStorage.setItem(C.ghTokenSaved, t);
+      if (!$('#rememberToken').checked) localStorage.removeItem(C.ghTokenSaved);
+      msg('设置已保存 ✅');
+      showNotification('相册设置已保存 ✅');
+    }
+    
+    function getCfg() {
+      return {
+        cloudName: $('#cloudName').value.trim(),
+        uploadPreset: $('#uploadPreset').value.trim(),
+        ghOwner: $('#ghOwner').value.trim(),
+        ghRepo: $('#ghRepo').value.trim(),
+        ghBranch: $('#ghBranch').value.trim() || 'main',
+        ghFile: $('#ghFile').value.trim() || 'gallery.json',
+        ghToken: $('#ghToken').value.trim() || localStorage.getItem(C.ghTokenSaved) || ''
+      };
+    }
+
+    // 读取 manifest（优先用 GitHub API）
+    async function readManifestViaAPI() {
+      const { ghOwner, ghRepo, ghFile, ghBranch } = getCfg();
+      const url = `https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/${encodeURIComponent(ghFile)}?ref=${encodeURIComponent(ghBranch)}`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/vnd.github+json' } });
+      if (res.status === 404) return { list: [], sha: null };
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.message || ('HTTP ' + res.status));
+      let list = [];
+      try { list = JSON.parse(atob(j.content || '')) || []; } catch (e) { list = []; }
+      return { list, sha: j.sha || null };
+    }
+
+    // 兼容回退：直接读 raw（带时间戳避免 CDN 缓存）
+    async function readManifestViaRaw() {
+      const { ghOwner, ghRepo, ghFile, ghBranch } = getCfg();
+      const url = `https://raw.githubusercontent.com/${ghOwner}/${ghRepo}/${ghBranch}/${ghFile}?t=${Date.now()}`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error('raw fetch failed: ' + res.status);
+      return await res.json();
+    }
+
+    async function fetchManifest() {
+      // 优先尝试 GitHub API（通常比 raw 更"新鲜"）
+      try {
+        const r = await readManifestViaAPI();
+        return r; // {list, sha}
+      } catch (e) {
+        console.warn('GitHub API 读取失败，回退到 raw：', e);
+        const list = await readManifestViaRaw();
+        return { list, sha: null };
+      }
+    }
+
+    // 渲染相册
+    async function renderGallery() {
+      try {
+        const { list } = await fetchManifest();
+        const container = $('#gallery');
+        container.innerHTML = '';
+        (list || []).slice().sort((a,b)=> (b.ts||0)-(a.ts||0)).forEach((item, idx) => {
+          const div = document.createElement('div');
+          div.className = 'relative';
+          const img = document.createElement('img');
+          img.src = item.src;
+          img.alt = item.alt || `照片 ${idx+1}`;
+          img.className = 'w-full h-40 object-cover rounded-lg shadow';
+          div.appendChild(img);
+          container.appendChild(div);
+        });
+        msg('');
+      } catch (e) {
+        console.error('renderGallery error', e);
+        msg('加载相册失败：' + (e.message || e));
+      }
+    }
+
+    // Cloudinary 上传
+    async function uploadToCloudinary(file) {
+      const { cloudName, uploadPreset } = getCfg();
+      if (!cloudName || !uploadPreset) throw new Error('请先填写 Cloudinary cloudName 与 unsigned preset（设置面板）');
+      const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', uploadPreset);
+      const res = await fetch(endpoint, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok || !data.secure_url) {
+        console.error('Cloudinary 返回：', data);
+        throw new Error('Cloudinary 上传失败：' + (data.error?.message || res.status));
+      }
+      return data.secure_url;
+    }
+
+    // GitHub 写入 manifest（创建或更新）
+    async function writeManifest(list, sha, message) {
+      const { ghOwner, ghRepo, ghFile, ghBranch, ghToken } = getCfg();
+      if (!ghToken) throw new Error('请在设置里输入 GitHub Token（仅本机）');
+      const apiUrl = `https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/${encodeURIComponent(ghFile)}`;
+
+      const body = {
+        message: message || 'update gallery',
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(list, null, 2)))),
+        branch: ghBranch
+      };
+      if (sha) body.sha = sha; // 更新已有文件
+      const res = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': `Bearer ${ghToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        console.error('writeManifest error', res.status, text);
+        throw new Error('写入 gallery.json 失败：' + text);
+      }
+      return JSON.parse(text);
+    }
+
+    // 写入后等待生效（轮询检测最新 manifest 包含新 URL）
+    async function waitForManifestToContain(expectedUrls, {attempts=8, delayMs=900} = {}) {
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const { list } = await fetchManifest();
+          const srcs = (list || []).map(it => it.src);
+          const allPresent = expectedUrls.every(u => srcs.includes(u));
+          if (allPresent) return true;
+        } catch (e) {
+          // ignore and retry
+          console.warn('waitForManifest .. fetch failed', e);
+        }
+        await new Promise(r => setTimeout(r, delayMs));
+      }
+      return false;
+    }
+
+    // 上传入口：Cloudinary -> 写 GitHub -> 等待生效 -> 刷新
+    async function startUpload() {
+      try {
+        msg('上传中…');
+        const files = Array.from($('#fileInput').files || []);
+        if (files.length === 0) { msg('请选择图片'); return; }
+
+        // 读取当前 manifest（可能为空）
+        const { list, sha } = await fetchManifest();
+        const addedUrls = [];
+
+        // 逐个上传 Cloudinary
+        for (const f of files) {
+          const url = await uploadToCloudinary(f);
+          const item = { src: url, alt: f.name, who: '我们', ts: Date.now() };
+          list.push(item);
+          addedUrls.push(url);
+        }
+
+        // 写回 GitHub
+        await writeManifest(list, sha, `add ${files.length} photo(s)`);
+
+        // 等待 manifest 生效（短轮询）
+        msg('写入成功，等待 GitHub 内容生效（可能需几秒）…');
+        const ok = await waitForManifestToContain(addedUrls, { attempts: 10, delayMs: 900 });
+        if (!ok) {
+          msg('写入成功，但未在短时间内检测到更新（可能 CDN 延迟）。稍等片刻或手动刷新。');
+        } else {
+          msg('更新已生效，刷新相册中…');
+        }
+
+        // 最后刷新显示
+        await renderGallery();
+        $('#fileInput').value = '';
+        msg('上传完成 ✅');
+        showNotification('照片上传完成 ✅');
+      } catch (e) {
+        console.error('startUpload error', e);
+        alert('上传失败：' + (e.message || e));
+        msg('上传失败：' + (e.message || e));
+        showNotification('上传失败：' + (e.message || e));
+      }
+    }
+
     // 页面加载时初始化
     document.addEventListener('DOMContentLoaded', () => {
       loadTableInfo();
+      loadCfgToForm();
       renderGallery();
 
       // 初始化并启动计时器更新恋爱时长
@@ -331,60 +606,19 @@
       calcLoveTime(); // 立即计算一次
       setInterval(calcLoveTime, 1000); // 每秒更新一次
     });
-    // 相册功能
-    function uploadPhotos(event) {
-      const files = event.target.files;
-      let gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          gallery.push({src: e.target.result, type: 'local'});
-          localStorage.setItem('gallery', JSON.stringify(gallery));
-          renderGallery();
-        };
-        reader.readAsDataURL(file);
-      });
-      event.target.value = '';
-      showNotification('照片已添加 📸');
-    }
 
-    function savePhotoPath() {
-      const path = document.getElementById('photoPath').value;
-      if (!path) return;
-      let gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
-      gallery.push({src: path, type: 'path'});
-      localStorage.setItem('gallery', JSON.stringify(gallery));
-      document.getElementById('photoPath').value = '';
-      renderGallery();
-      showNotification('照片路径已添加 📸');
-    }
-
-    function renderGallery() {
-      const gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
-      const container = document.getElementById('gallery');
-      container.innerHTML = '';
-      gallery.forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = "relative";
-        const img = document.createElement('img');
-        img.src = item.src;
-        img.className = "w-full h-32 object-cover rounded-xl";
-        img.alt = `相册照片 ${index + 1}`;
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = "absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs";
-        deleteBtn.innerHTML = '<i class="fa fa-times"></i>';
-        deleteBtn.onclick = () => {
-          gallery.splice(index, 1);
-          localStorage.setItem('gallery', JSON.stringify(gallery));
-          renderGallery();
-        };
-
-        div.appendChild(img);
-        div.appendChild(deleteBtn);
-        container.appendChild(div);
-      });
-    }
+    // 事件绑定
+    $('#saveCfgBtn').addEventListener('click', saveFormToCfg);
+    $('#refreshBtn').addEventListener('click', renderGallery);
+    $('#uploadBtn').addEventListener('click', startUpload);
+    $('#clearTokenBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem(C.ghTokenSaved);
+      $('#ghToken').value = '';
+      $('#rememberToken').checked = false;
+      msg('已清除本机保存的 Token');
+      showNotification('已清除本机保存的 Token');
+    });
   </script>
 </body>
 </html>
